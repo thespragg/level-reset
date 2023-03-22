@@ -4,6 +4,8 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 
+import java.util.Arrays;
+
 @ConfigGroup("levelReset")
 public interface LevelResetConfig extends Config
 {
@@ -15,5 +17,15 @@ public interface LevelResetConfig extends Config
 	default int level()
 	{
 		return 92;
+	}
+
+	@ConfigItem(
+			keyName = "skills",
+			name = "Skills",
+			description = "What skills the plugin should reset. (Comma separated)"
+	)
+	default String skills()
+	{
+		return "";
 	}
 }
