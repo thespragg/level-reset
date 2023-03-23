@@ -31,6 +31,7 @@ import java.awt.event.KeyEvent;
 import java.util.List;
 
 import com.levelreset.LevelResetPlugin;
+import com.levelreset.utils.XpReset;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.runelite.api.ChatMessageType;
@@ -56,14 +57,16 @@ public class LevelUpDisplayInput extends ChatboxInput implements KeyListener
 
     private final LevelResetPlugin plugin;
     private final Skill skill;
+    private final XpReset reset;
 
     @Getter
     private boolean closeMessage;
 
-    public LevelUpDisplayInput(LevelResetPlugin plugin, Skill skill)
+    public LevelUpDisplayInput(LevelResetPlugin plugin, Skill skill, XpReset reset)
     {
         this.plugin = plugin;
         this.skill = skill;
+        this.reset = reset;
     }
 
     @Override
@@ -75,7 +78,7 @@ public class LevelUpDisplayInput extends ChatboxInput implements KeyListener
 
         final String skillName = skill.getName();
         final int skillExperience = plugin.getClient().getSkillExperience(skill);
-        final int skillLevel = Experience.getLevelForXp(skillExperience);
+        final int skillLevel = reset.getNewLevel(skillExperience);
         final List<SkillModel> skillModels = SkillModel.getSKILL_MODELS(skill);
         final String prefix = (skill == Skill.AGILITY || skill == Skill.ATTACK) ? "an " : "a ";
 

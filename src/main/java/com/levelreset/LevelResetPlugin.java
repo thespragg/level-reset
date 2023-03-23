@@ -45,9 +45,6 @@ public class LevelResetPlugin extends Plugin {
     @Inject
     private Client client;
 
-    @Inject
-    private EventBus eventBus;
-
     @Getter(AccessLevel.PUBLIC)
     @Inject
     private ClientThread clientThread;
@@ -92,12 +89,10 @@ public class LevelResetPlugin extends Plugin {
     }
 
     @Override
-    public void shutDown()
-    {
+    public void shutDown() {
         overlayManager.remove(overlay);
 
-        if (input != null && chatboxPanelManager.getCurrentInput() == input)
-        {
+        if (input != null && chatboxPanelManager.getCurrentInput() == input) {
             chatboxPanelManager.close();
         }
 
@@ -128,74 +123,76 @@ public class LevelResetPlugin extends Plugin {
 
     private HashMap<Skill, NewLevel> updatedSkills = new HashMap<>();
 
-    @Subscribe
-    public void onScriptCallbackEvent(ScriptCallbackEvent e)
-    {
-        final String eventName = e.getEventName();
-        if(!eventName.equals("skillTabBaseLevel")) return;
+//    @Subscribe
+//    public void onScriptCallbackEvent(ScriptCallbackEvent e)
+//    {
+//        final String eventName = e.getEventName();
+//        if(!eventName.equals("skillTabBaseLevel")) return;
+//
+//        for(int i = 0; i < skillsToSet.size(); i++){
+//            Skill skill = skillsToSet.get(i);
+//            final int exp = client.getSkillExperience(skill);
+//            NewLevel newLevel = xpReset.getAdjustedLevel(exp);
+//            if(updatedSkills.containsKey(skill) && updatedSkills.get(skill).Xp == newLevel.Xp) continue;
+//            if(updatedSkills.containsKey(skill) && updatedSkills.get(skill).Level < newLevel.Level) skillsLeveledUp.add(skill);
+//            setSkillXp(skill, newLevel);
+//            updatedSkills.put(skill, newLevel);
+//        }
+//    }
 
-        for(int i = 0; i < skillsToSet.size(); i++){
-            Skill skill = skillsToSet.get(i);
-            final int exp = client.getSkillExperience(skill);
-            NewLevel newLevel = xpReset.getAdjustedLevel(exp);
-            if(updatedSkills.containsKey(skill) && updatedSkills.get(skill).Xp == newLevel.Xp) continue;
-            if(updatedSkills.containsKey(skill) && updatedSkills.get(skill).Level < newLevel.Level) skillsLeveledUp.add(skill);
-            setSkillXp(skill, newLevel);
-            updatedSkills.put(skill, newLevel);
+    @Subscribe
+    public void onStatChanged(StatChanged event) {
+        final Skill skill = event.getSkill();
+        if (!skillsToSet.contains(skill)) return;
+
+        int exp = client.getSkillExperience(skill);
+        NewLevel newLevel = xpReset.getAdjustedLevel(exp);
+        setSkillXp(skill, newLevel);
+
+        int oldLevel = updatedSkills.get(skill) != null ? updatedSkills.get(skill).getLevel() : newLevel.getLevel();
+        if (oldLevel < newLevel.getLevel()) {
+            skillsLeveledUp.add(skill);
         }
+        updatedSkills.put(skill, newLevel);
     }
 
     @Subscribe
-    public void onGameTick(GameTick event)
-    {
-        if (input != null)
-        {
+    public void onGameTick(GameTick event) {
+        if (input != null) {
             input.closeIfTriggered();
         }
 
-        if (skillsLeveledUp.isEmpty() || !chatboxPanelManager.getContainerWidget().isHidden())
-        {
+        if (skillsLeveledUp.isEmpty() || !chatboxPanelManager.getContainerWidget().isHidden()) {
             return;
         }
 
         final Skill skill = skillsLeveledUp.remove(0);
 
-        input = new LevelUpDisplayInput(this, skill);
+        input = new LevelUpDisplayInput(this, skill, xpReset);
         chatboxPanelManager.openInput(input);
     }
 
-    private void performStartup(){
+    private void performStartup() {
         xpReset = new XpReset(config.level());
         skillsToSet = parseSkills();
         simulateSkillChange();
         updatedSkills.clear();
     }
 
-    private void simulateSkillChange()
-    {
-        for (Skill skill : Skill.values())
-        {
-            if (skill != Skill.OVERALL)
-            {
+    private void simulateSkillChange() {
+        for (Skill skill : Skill.values()) {
+            if (skill != Skill.OVERALL) {
                 client.queueChangedSkill(skill);
             }
         }
     }
 
-    private void setSkillXp(Skill skill, NewLevel newLevel){
-        client.getBoostedSkillLevels()[skill.ordinal()] = newLevel.Level;
-        client.getRealSkillLevels()[skill.ordinal()] = newLevel.Level;
-        client.getSkillExperiences()[skill.ordinal()] = newLevel.Xp;
+    private void setSkillXp(Skill skill, NewLevel newLevel) {
+        client.getBoostedSkillLevels()[skill.ordinal()] = newLevel.getLevel();
+        client.getRealSkillLevels()[skill.ordinal()] = newLevel.getLevel();
+        client.getSkillExperiences()[skill.ordinal()] = newLevel.getXp();
 
         client.queueChangedSkill(skill);
-
-        StatChanged statChanged = new StatChanged(
-                skill,
-                newLevel.Xp,
-                newLevel.Level,
-                newLevel.Level
-        );
-        eventBus.post(statChanged);
     }
 
     private List<Skill> parseSkills() {
