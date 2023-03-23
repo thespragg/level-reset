@@ -1,4 +1,4 @@
-package com.levelreset;
+package com.levelreset.utils;
 
 import com.levelreset.models.NewLevel;
 import net.runelite.api.Experience;
