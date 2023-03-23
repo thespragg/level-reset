@@ -123,23 +123,6 @@ public class LevelResetPlugin extends Plugin {
 
     private HashMap<Skill, NewLevel> updatedSkills = new HashMap<>();
 
-//    @Subscribe
-//    public void onScriptCallbackEvent(ScriptCallbackEvent e)
-//    {
-//        final String eventName = e.getEventName();
-//        if(!eventName.equals("skillTabBaseLevel")) return;
-//
-//        for(int i = 0; i < skillsToSet.size(); i++){
-//            Skill skill = skillsToSet.get(i);
-//            final int exp = client.getSkillExperience(skill);
-//            NewLevel newLevel = xpReset.getAdjustedLevel(exp);
-//            if(updatedSkills.containsKey(skill) && updatedSkills.get(skill).Xp == newLevel.Xp) continue;
-//            if(updatedSkills.containsKey(skill) && updatedSkills.get(skill).Level < newLevel.Level) skillsLeveledUp.add(skill);
-//            setSkillXp(skill, newLevel);
-//            updatedSkills.put(skill, newLevel);
-//        }
-//    }
-
     @Subscribe
     public void onStatChanged(StatChanged event) {
         final Skill skill = event.getSkill();
